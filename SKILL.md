@@ -1,7 +1,7 @@
 ---
 name: wechat-local-chat
 description: Collect scoped WeChat chats and produce cited reports.
-version: 0.1.0
+version: 0.1.1
 author: Wang Sheng (tsetwf-cloud), Hermes Agent
 license: MIT
 platforms: [linux, windows]

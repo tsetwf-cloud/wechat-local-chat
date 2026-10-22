@@ -1,4 +1,4 @@
-# Verification record · 0.1.0
+# Verification record · 0.1.1
 
 Local verification date: 2026-10-22. This record describes observed results, not universal compatibility.
 
@@ -12,7 +12,7 @@ Local verification date: 2026-10-22. This record describes observed results, not
 
 ## Observed results
 
-- 45 Python synthetic tests passed, including pre-existing linked output rejection, refusal of a nonprivate saved-snapshot output root, clipped report coverage, >500-message traversal, name ambiguity, exact time bounds, mutation/hash failure, version rollback, cross-scope rejection, CLI invocation from another working directory and runtime setup/build checks.
+- 46 Python synthetic tests passed, including source-row reuse without historic evidence revival, pre-existing linked output rejection, refusal of a nonprivate saved-snapshot output root, clipped report coverage, >500-message traversal, name ambiguity, exact time bounds, mutation/hash failure, version rollback, cross-scope rejection, CLI invocation from another working directory and runtime setup/build checks.
 - Actual Windows compile and both bundled native fixture executables succeeded: six crypto/capture checks and four security regression checks. These are synthetic, not live key/process compatibility tests.
 - Fresh live capture in the separately initialized root succeeded for one previously owner-authorized contact/time interval: three matching messages.
 - Keyword search, two evidence chunks, current authorized AI analysis, and local report registration succeeded. Report cited all three scoped message IDs. Personal account, name, message bodies, IDs and paths are excluded from this public record.
@@ -22,7 +22,11 @@ Local verification date: 2026-10-22. This record describes observed results, not
 
 ## Clean local installation
 
-The actual Hermes quarantine → community scan → install implementation installed the complete 31-file release manifest into an isolated test home. The installed file set exactly matched the manifest. All 45 synthetic Python tests passed again from the installed location with a different working directory. The fixed installed package also repeated the original live scope successfully (three unchanged messages), created two evidence chunks and registered a hash-verified report with explicit coverage metadata. This exercises local installation; remote GitHub fetch is separately checked after upload.
+The actual Hermes quarantine → community scan → install implementation installed the complete 31-file release manifest into an isolated test home. The installed file set exactly matched the manifest. All 46 synthetic Python tests passed again from the 0.1.1 installed location with a different working directory. The 0.1.1 installed package also repeated the original live scope successfully (three unchanged messages with unchanged stable IDs), created evidence chunks and registered a hash-verified report with explicit coverage metadata. The earlier 0.1.0 GitHub CLI fetch/install was separately verified and its 30 installer-delivered files matched the repository byte-for-byte; the installer intentionally omits repository-only `.gitignore`.
+
+## 0.1.1 correctness correction
+
+A late synthetic audit reproduced source-row reuse: after a server-ID message disappeared and another message reused its SQLite row, the 0.1.0 current view could incorrectly include the historic payload. Version 0.1.1 selects current records using the same canonical archive identity as storage, not source row coordinates. The regression exercises collect → load → context, verifies added/unchanged/missing counts, retains historic rows in the archive, and leaves prior requests unchanged. Old immutable requests/reports are not retroactively repaired; recollect the authorized scope and regenerate analysis before relying on potentially affected results.
 
 ## Installation scanner
 

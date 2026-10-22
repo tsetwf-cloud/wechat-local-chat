@@ -104,6 +104,30 @@ class BusinessTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'hash'):
             m.collect(self.private,name='Fixture Nick',start='2024-10-01',end='2024-10-01',snapshot=self.root)
 
+    def test_reused_source_rowid_never_revives_historic_evidence(self):
+        self.prepare();m=self.module()
+        first=m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-01',snapshot=self.root)
+        _,original,_=m.load(self.private,first['request_id'])
+        old_id=next(r['archive_id'] for r in original if r['server_id']==101)
+        with sqlite3.connect(self.db) as con:
+            con.execute(f'DELETE FROM [{self.table}] WHERE rowid=1')
+            con.execute(f'INSERT INTO [{self.table}] (rowid,local_id,server_id,local_type,create_time,real_sender_id,message_content,WCDB_CT_message_content) VALUES (1,1,202,1,1727712000,2,?,0)',('replacement fixture',))
+        manifest=json.loads((self.root/'snapshot-manifest.json').read_text())
+        manifest['provenance']['reports'][0]['plaintext_sha256']=workflow.sha(self.db)
+        (self.root/'snapshot-manifest.json').write_text(json.dumps(manifest))
+        second=m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-01',snapshot=self.root)
+        request,rows,path=m.load(self.private,second['request_id'])
+        self.assertEqual([102,202],sorted(r['server_id'] for r in rows))
+        self.assertEqual(2,request['total'])
+        self.assertEqual({'added':1,'updated':0,'unchanged':1,'missing':1},second['changes'])
+        context=m.context(self.private,second['request_id'])
+        ids={x['id'] for p in context['paths'] for x in json.loads(Path(p).read_text())['messages']}
+        self.assertNotIn(old_id,ids)
+        self.assertEqual(2,len(ids))
+        with sqlite3.connect(path/'archive.sqlite') as con:
+            self.assertEqual(3,con.execute('SELECT COUNT(*) FROM messages').fetchone()[0])
+        self.assertEqual(2,len(m.load(self.private,first['request_id'])[1]))
+
     def test_report_discloses_snapshot_clipped_coverage(self):
         self.prepare();m=self.module()
         result=m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-05',snapshot=self.root)

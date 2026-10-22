@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import uuid
-from selected_chat import persist_selected, readable_content, SelectedChatError
+from selected_chat import persist_selected, readable_content, SelectedChatError, archive_identity
 
 
 def safe_path(path):
@@ -125,8 +125,8 @@ def publish(result, output):
         begin,finish=date_window(result['manifest']['start'],result['manifest']['end'])
         finish=min(finish,result['manifest']['cutoff_exclusive'])
         before=[r for r in rows(old) if begin<=r['create_time']<finish] if old else []
-        source_keys={(r['shard'],r['source_table'],r['source_rowid']) for r in result['records']}
-        now=[r for r in now if (r['shard'],r['source_table'],r['source_rowid']) in source_keys]
+        source_ids={archive_identity(r,result['manifest']['source_manifest']['account'],result['manifest']['talker']) for r in result['records']}
+        now=[r for r in now if r['archive_id'] in source_ids]
         a={r['archive_id']:r for r in before};b={r['archive_id']:r for r in now}
         changes={'added':len(b.keys()-a.keys()),'updated':sum(semantic(b[k])!=semantic(a[k]) for k in b.keys()&a.keys()),
                  'unchanged':sum(semantic(b[k])==semantic(a[k]) for k in b.keys()&a.keys()),'missing':len(a.keys()-b.keys())}

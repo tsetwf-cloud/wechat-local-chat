@@ -150,6 +150,13 @@ def search_selected(output, text):
             if text in readable_content(r := json.loads(line))]
 
 
+def archive_identity(record, account, talker):
+    """Canonical archive key, shared by retention and current-capture selection."""
+    sid = record.get('server_id')
+    identity = ['server', str(sid)] if sid not in (None, 0, '0', '') else ['local', record['shard'], record['source_table'], record['local_id'], record['create_time']]
+    return hashlib.sha256(json.dumps([account, talker, *identity], ensure_ascii=False).encode()).hexdigest()
+
+
 def persist_selected(result, output):
     import base64
     import os
@@ -173,9 +180,7 @@ def persist_selected(result, output):
         con.execute('INSERT OR IGNORE INTO scope VALUES (1,?,?)', scope)
         inserted = 0
         for record in records:
-            sid = record.get('server_id')
-            identity = ['server', str(sid)] if sid not in (None, 0, '0', '') else ['local', record['shard'], record['source_table'], record['local_id'], record['create_time']]
-            key = hashlib.sha256(json.dumps([*scope, *identity], ensure_ascii=False).encode()).hexdigest()
+            key = archive_identity(record, *scope)
             payload = json.dumps({**record, 'archive_id': key}, ensure_ascii=False, default=raw_json)
             prior = con.execute('SELECT 1 FROM messages WHERE id=?', (key,)).fetchone()
             inserted += prior is None
