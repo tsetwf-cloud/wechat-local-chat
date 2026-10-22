@@ -12,6 +12,20 @@ class WorkflowTests(unittest.TestCase):
     module=fixtures.SelectedChatTests.module
     add=fixtures.SelectedChatTests.add
     query=fixtures.SelectedChatTests.query
+    def test_preexisting_linked_output_ancestors_refused(self):
+        self.add()
+        result=self.query()
+        for relative in ('nested','nested/.workflow.lock','nested/generations'):
+            with self.subTest(path=relative):
+                import tempfile
+                with tempfile.TemporaryDirectory(dir=self.root.parent) as tmp:
+                    base=Path(tmp);outside=base/'outside';outside.mkdir()
+                    link=base/relative;link.parent.mkdir(parents=True,exist_ok=True)
+                    link.symlink_to(outside,target_is_directory=True)
+                    with self.assertRaisesRegex(ValueError,'linked'):
+                        workflow.publish(result,base/'nested')
+                    self.assertEqual([],list(outside.iterdir()))
+
     def test_exclusive_writer_rejects_concurrent_publish(self):
         self.add();out=self.root.parent/'published'
         with workflow.exclusive(out):

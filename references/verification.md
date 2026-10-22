@@ -12,7 +12,7 @@ Local verification date: 2026-10-22. This record describes observed results, not
 
 ## Observed results
 
-- 41 Python synthetic tests passed, including >500-message traversal, name ambiguity, exact time bounds, mutation/hash failure, version rollback, cross-scope rejection, CLI invocation from another working directory and runtime setup/build checks.
+- 45 Python synthetic tests passed, including pre-existing linked output rejection, refusal of a nonprivate saved-snapshot output root, clipped report coverage, >500-message traversal, name ambiguity, exact time bounds, mutation/hash failure, version rollback, cross-scope rejection, CLI invocation from another working directory and runtime setup/build checks.
 - Actual Windows compile and both bundled native fixture executables succeeded: six crypto/capture checks and four security regression checks. These are synthetic, not live key/process compatibility tests.
 - Fresh live capture in the separately initialized root succeeded for one previously owner-authorized contact/time interval: three matching messages.
 - Keyword search, two evidence chunks, current authorized AI analysis, and local report registration succeeded. Report cited all three scoped message IDs. Personal account, name, message bodies, IDs and paths are excluded from this public record.
@@ -22,7 +22,7 @@ Local verification date: 2026-10-22. This record describes observed results, not
 
 ## Clean local installation
 
-The actual Hermes quarantine → community scan → install implementation installed the complete 31-file release manifest into an isolated test home. The installed file set exactly matched the manifest. All 41 synthetic Python tests passed again from the installed location with a different working directory. This exercises local installation; remote GitHub fetch is separately checked after upload.
+The actual Hermes quarantine → community scan → install implementation installed the complete 31-file release manifest into an isolated test home. The installed file set exactly matched the manifest. All 45 synthetic Python tests passed again from the installed location with a different working directory. The fixed installed package also repeated the original live scope successfully (three unchanged messages), created two evidence chunks and registered a hash-verified report with explicit coverage metadata. This exercises local installation; remote GitHub fetch is separately checked after upload.
 
 ## Installation scanner
 

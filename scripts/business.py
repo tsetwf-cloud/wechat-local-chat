@@ -72,10 +72,19 @@ def resolve(snapshot,name,talker=None):
     return next(iter(identities))
 
 
-def collect(root,*,name,start,end,question='',snapshot=None,talker=None):
-    root=Path(root).absolute()
+def private_root(root):
+    root=workflow.safe_path(root)
     if root.resolve().is_relative_to(Path(__file__).resolve().parents[1]):raise SelectedChatError('private state must be outside the installed skill')
-    if any(p.is_symlink() for p in [root,*root.parents]):raise SelectedChatError('linked private root rejected')
+    if os.name!='nt' and not re.match(r'^/mnt/[A-Za-z](?:/|$)',str(root)):
+        if root.stat().st_mode & 0o077:raise RuntimeError('private root permissions must be 0700')
+    else:
+        import runtime
+        runtime.protect_private_root(root)
+    return root
+
+
+def collect(root,*,name,start,end,question='',snapshot=None,talker=None):
+    root=private_root(root)
     begin,finish=bounds(start,end) # Validate before process access.
     if not isinstance(question,str) or len(question)>20000:raise SelectedChatError('invalid analysis question')
     if not isinstance(name,str) or not name or '\x00' in name:raise SelectedChatError('exact name required')
@@ -83,7 +92,7 @@ def collect(root,*,name,start,end,question='',snapshot=None,talker=None):
     if config_path.is_symlink():raise SelectedChatError('linked config rejected')
     config=json.loads(config_path.read_text(encoding='utf-8'))
     account=config['account']
-    base=root/'business'
+    base=workflow.safe_path(root/'business')
     with workflow.exclusive(base):
         if snapshot is None:
             import run_selected
@@ -120,7 +129,7 @@ def collect(root,*,name,start,end,question='',snapshot=None,talker=None):
                  'snapshot_path':str(snapshot),'wal_included':False,
                  'completeness_warning':'主库模式不包含仍在WAL中的近期消息；未同步到本机及媒体文件内容不在本次数据中。',
                  'analysis_question':question,'total':published['total'],'changes':published['changes']}
-        folder=base/'requests'/request_id
+        folder=workflow.safe_path(base/'requests'/request_id)
         folder.mkdir(parents=True,mode=0o700)
         workflow.atomic_json(folder/'request.json',request)
         return {'request_id':request_id,'request_path':str(folder/'request.json'),
@@ -130,7 +139,7 @@ def collect(root,*,name,start,end,question='',snapshot=None,talker=None):
 
 def request_folder(root,request_id):
     if not isinstance(request_id,str) or not re.fullmatch('[0-9a-f]{32}',request_id):raise SelectedChatError('invalid request ID')
-    p=Path(root).absolute()/'business'/'requests'/request_id
+    p=workflow.safe_path(private_root(root)/'business'/'requests'/request_id)
     if any(x.is_symlink() for x in [p,*p.parents]):raise SelectedChatError('linked request path rejected')
     return p
 
@@ -160,7 +169,7 @@ def inspect_request(root,request_id):
 
 def history(root):
     items=[]
-    base=Path(root).absolute()/'business'/'requests'
+    base=workflow.safe_path(private_root(root)/'business'/'requests')
     for p in base.iterdir() if base.exists() else []:
         if not re.fullmatch('[0-9a-f]{32}',p.name):continue
         r=inspect_request(root,p.name)
@@ -203,10 +212,19 @@ def save_analysis(root,request_id,file):
     cited=set(re.findall(r'\[消息:([0-9a-f]{64})\]',text))
     if (rows and not cited) or not cited<=valid:raise SelectedChatError('analysis must cite valid [消息:full_id] evidence')
     path=request_folder(root,request_id)/('analysis_'+uuid.uuid4().hex+'.md')
-    header='# 微信会话按需分析\n\n名称：'+r['name']+'\n\n范围：'+r['start']+' 至 '+r['end']+'（UTC+8）\n\n请求：'+request_id+'\n\n数据限制：'+r['completeness_warning']+'\n\n'
+    coverage={k:r[k] for k in ('begin_inclusive','requested_end_exclusive','effective_end_exclusive','source_mode','source_captured_at')}
+    coverage['coverage_clipped']=r['effective_end_exclusive']<r['requested_end_exclusive']
+    begin=datetime.fromtimestamp(r['begin_inclusive'],TZ).isoformat()
+    end=datetime.fromtimestamp(r['effective_end_exclusive'],TZ).isoformat()
+    coverage_note='已截短：证据截止早于请求结束，不能据此判断后续时段。' if coverage['coverage_clipped'] else '时间上界未截短；不代表消息完整。'
+    header=('# 微信会话按需分析\n\n名称：'+r['name']+'\n\n请求范围：'+r['start']+' 至 '+r['end']+'（UTC+8）'
+            +'\n\n证据时间窗：['+begin+', '+end+')（UTC+8；仅说明筛选边界，不保证记录齐全）'
+            +'\n\n覆盖说明：'+coverage_note+'\n\n来源模式：'+r['source_mode']
+            +'\n\n快照采集时间：'+r['source_captured_at']+'\n\n请求：'+request_id
+            +'\n\n数据限制：'+r['completeness_warning']+'\n\n')
     fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
     with os.fdopen(fd,'w',encoding='utf-8') as f:f.write(header+text);f.flush();os.fsync(f.fileno())
-    workflow.atomic_json(path.with_suffix('.json'),{'request_id':request_id,'report_sha256':workflow.sha(path),'cited_message_ids':sorted(cited),'generated_by':'current authorized AI; citation existence checked, factual reasoning not mechanically verified'})
+    workflow.atomic_json(path.with_suffix('.json'),{'request_id':request_id,**coverage,'report_sha256':workflow.sha(path),'cited_message_ids':sorted(cited),'generated_by':'current authorized AI; citation existence checked, factual reasoning not mechanically verified'})
     return {'path':str(path),'cited_messages':len(cited),'uploaded':False}
 
 

@@ -25,7 +25,7 @@ class BusinessTests(unittest.TestCase):
         self.add()
         self.add(lid=2,sid=102,ts=1727715600,content='later fixture')
         self.private=self.root.parent/'private'
-        self.private.mkdir()
+        self.private.mkdir(mode=0o700)
         (self.private/'config.json').write_text(json.dumps({
             'account':'fixture_self','source_db_storage':'synthetic-only'}))
         manifest=json.loads((self.root/'snapshot-manifest.json').read_text())
@@ -34,6 +34,22 @@ class BusinessTests(unittest.TestCase):
             {'relative_path':str(p.relative_to(self.root)), 'plaintext_sha256':workflow.sha(p),'integrity_ok':True}
             for p in [self.db,self.root/'contact/contact.db']]}
         (self.root/'snapshot-manifest.json').write_text(json.dumps(manifest))
+
+    def test_linked_business_directory_refuses_all_output(self):
+        self.prepare();m=self.module()
+        outside=self.root.parent/'outside';outside.mkdir()
+        (self.private/'business').symlink_to(outside,target_is_directory=True)
+        with self.assertRaisesRegex(ValueError,'linked'):
+            m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-01',snapshot=self.root)
+        self.assertEqual([],list(outside.iterdir()))
+
+    def test_saved_snapshot_refuses_nonprivate_output_root(self):
+        self.prepare();m=self.module()
+        self.private.chmod(0o755)
+        with self.assertRaisesRegex(RuntimeError,'permissions'):
+            m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-01',snapshot=self.root)
+        self.assertFalse((self.private/'business').exists())
+        self.assertEqual(0o755,self.private.stat().st_mode & 0o777)
 
     def test_request_collects_exact_name_time_and_creates_evidence(self):
         self.prepare()
@@ -87,6 +103,24 @@ class BusinessTests(unittest.TestCase):
         with self.db.open('ab') as f:f.write(b'changed')
         with self.assertRaisesRegex(ValueError,'hash'):
             m.collect(self.private,name='Fixture Nick',start='2024-10-01',end='2024-10-01',snapshot=self.root)
+
+    def test_report_discloses_snapshot_clipped_coverage(self):
+        self.prepare();m=self.module()
+        result=m.collect(self.private,name='Fixture Peer',start='2024-10-01',end='2024-10-05',snapshot=self.root)
+        request,rows,_=m.load(self.private,result['request_id'])
+        draft=self.root.parent/'coverage.md'
+        draft.write_text('Observation [消息:'+rows[0]['archive_id']+']',encoding='utf-8')
+        saved=Path(m.save_analysis(self.private,result['request_id'],draft)['path'])
+        report=saved.read_text(encoding='utf-8')
+        self.assertIn('请求范围：2024-10-01 至 2024-10-05',report)
+        self.assertIn('证据时间窗：[2024-10-01T00:00:00+08:00, 2024-10-02T00:00:00+08:00)',report)
+        self.assertIn('saved-snapshot',report)
+        self.assertIn('快照采集时间：2024-10-02T00:00:00+08:00',report)
+        self.assertIn('已截短',report)
+        meta=json.loads(saved.with_suffix('.json').read_text(encoding='utf-8'))
+        for key in ('begin_inclusive','requested_end_exclusive','effective_end_exclusive','source_mode','source_captured_at'):
+            self.assertEqual(request[key],meta[key])
+        self.assertIs(meta['coverage_clipped'],True)
 
     def test_citation_save_and_empty_result(self):
         self.prepare();m=self.module()

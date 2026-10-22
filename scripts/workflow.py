@@ -12,13 +12,31 @@ import uuid
 from selected_chat import persist_selected, readable_content, SelectedChatError
 
 
+def safe_path(path):
+    """Reject pre-existing links/reparse points on every ancestor, no race guarantee."""
+    path=Path(path).absolute()
+    if '..' in path.parts:
+        raise SelectedChatError('path traversal rejected')
+    for item in (path,*path.parents):
+        if item.is_symlink():
+            raise SelectedChatError('linked publication path rejected')
+        try:
+            attributes=getattr(item.lstat(),'st_file_attributes',0)
+        except FileNotFoundError:
+            continue
+        if attributes & 0x400:
+            raise SelectedChatError('linked reparse path rejected')
+    return path
+
+
 def sha(path):
+    path=safe_path(path)
     with Path(path).open('rb') as f:
         return hashlib.file_digest(f,'sha256').hexdigest()
 
 
 def atomic_json(path, value):
-    path=Path(path)
+    path=safe_path(path)
     tmp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp')
     try:
         fd=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
@@ -32,8 +50,8 @@ def atomic_json(path, value):
 
 @contextmanager
 def exclusive(root):
-    root=Path(root);root.mkdir(parents=True,exist_ok=True,mode=0o700)
-    fd=os.open(root/'.workflow.lock',os.O_CREAT|os.O_RDWR,0o600)
+    root=safe_path(root);root.mkdir(parents=True,exist_ok=True,mode=0o700)
+    fd=os.open(safe_path(root/'.workflow.lock'),os.O_CREAT|os.O_RDWR,0o600)
     with os.fdopen(fd,'r+b',buffering=0) as lock:
         if os.name=='nt':
             import msvcrt
@@ -57,14 +75,14 @@ def exclusive(root):
 def generation(root, name):
     if not isinstance(name,str) or len(name)!=32 or any(c not in '0123456789abcdef' for c in name):
         raise SelectedChatError('invalid generation ID')
-    path=Path(root)/'generations'/name
+    path=safe_path(Path(root)/'generations'/name)
     if path.is_symlink() or path.parent.is_symlink() or Path(root).is_symlink():
         raise SelectedChatError('linked publication path rejected')
     return path
 
 
 def current(root):
-    root=Path(root)
+    root=safe_path(root)
     pointer=root/'current.json'
     if pointer.is_symlink():
         raise SelectedChatError('linked pointer rejected')
@@ -82,7 +100,7 @@ def current(root):
 
 
 def rows(path):
-    return [json.loads(line) for line in (path/'messages.jsonl').read_text(encoding='utf-8').splitlines()]
+    return [json.loads(line) for line in safe_path(path/'messages.jsonl').read_text(encoding='utf-8').splitlines()]
 
 
 def semantic(record):

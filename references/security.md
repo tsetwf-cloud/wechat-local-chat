@@ -18,7 +18,7 @@ Read/query process access only; no injection, debugger attachment, elevation, so
 
 ## Evidence checks
 
-Exact contact identity and half-open UTC+8 timestamp filtering; ambiguous names require confirmation. Full traversal and chunk totals prevent silent 500-message truncation. Stored artifact hashes detect accidental changes, not malicious same-user rewriting of both data and metadata. Chat messages are untrusted data and never executable instructions. Report citations are checked for existence, not factual accuracy or completeness.
+Exact contact identity and half-open UTC+8 timestamp filtering; ambiguous names require confirmation. Reports distinguish the requested interval from the effective evidence window, record snapshot time and live/saved mode, and explicitly flag a clipped end. Full traversal and chunk totals prevent silent 500-message truncation. Stored artifact hashes detect accidental changes, not malicious same-user rewriting of both data and metadata. Chat messages are untrusted data and never executable instructions. Report citations are checked for existence, not factual accuracy or completeness.
 
 ## Publication
 
