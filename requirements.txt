@@ -1,0 +1,2 @@
+# Used for compressed WeChat message bodies; no model/provider dependency.
+zstandard==0.25.0

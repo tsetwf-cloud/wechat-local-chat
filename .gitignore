@@ -1,0 +1,24 @@
+# Private state must live outside this source tree. Ignore is a backup only.
+__pycache__/
+*.pyc
+.venv/
+python-env/
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.db
+*.db-*
+*.sqlite*
+*.jsonl
+*.key
+*.pem
+.env
+.env.*
+config.json
+config.local.*
+private/
+output/
+outputs/
+verification.local.*
