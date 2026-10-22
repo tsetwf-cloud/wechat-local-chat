@@ -196,4 +196,3 @@ def persist_selected(result, output):
             f.write(text); f.flush(); os.fsync(f.fileno())
         os.replace(tmp,root/name)
     return {'inserted': inserted, 'total': len(all_records)}
-

@@ -83,7 +83,7 @@ class RuntimeTests(unittest.TestCase):
             runtime.wsl_to_win('/home/test')
         with patch.object(runtime, 'platform_kind', return_value='wsl'), \
              patch.object(runtime, 'powershell', return_value=r'C:\Users\fixture\AppData\Local') as ps, \
-             patch.object(runtime, 'os', SimpleNamespace(environ={})): 
+             patch.object(runtime, 'os', SimpleNamespace(environ={})):
             root = runtime.default_private_root()
             self.assertEqual(str(root), '/mnt/c/Users/fixture/AppData/Local/WeChatLocalChat/private')
             self.assertEqual(ps.call_count, 1)
