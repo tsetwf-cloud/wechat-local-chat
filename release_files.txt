@@ -11,6 +11,7 @@ references/security.md
 references/sources.md
 references/troubleshooting.md
 references/verification.md
+references/video_walkthrough.md
 scripts/bootstrap.py
 scripts/business.py
 scripts/chat.py
