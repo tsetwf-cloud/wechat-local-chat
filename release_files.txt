@@ -6,6 +6,9 @@ THIRD_PARTY_LICENSE.txt
 config.example.json
 requirements.txt
 release_files.txt
+examples/README.md
+examples/prompts.md
+examples/run_demo.py
 references/architecture.md
 references/security.md
 references/sources.md
@@ -24,6 +27,7 @@ scripts/native/src/Main.cs
 scripts/native/src/Probe.cs
 scripts/native/src/Runtime.cs
 tests/test_business.py
+tests/test_examples.py
 tests/test_package.py
 tests/test_runtime.py
 tests/test_selected_chat.py

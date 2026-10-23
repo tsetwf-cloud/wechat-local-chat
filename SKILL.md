@@ -28,6 +28,10 @@ One task entry for owner-authorized local WeChat collection, exact name/time sel
 
 ## First Use
 
+For a no-private-data trial, follow [the synthetic example](examples/README.md): run `python <SKILL_DIR>/examples/run_demo.py --output NEW_DIRECTORY` in Linux/WSL, with an existing parent outside the package. Do not initialize a real account for this trial. It invokes the real CLI with synthetic snapshots and a prewritten report body; it does not test AI reasoning or live capture. Respect existing outputs and do not overwrite them. For real-data setup continue below. Read [task prompts](examples/prompts.md) only when needed; security and scope rules here always apply.
+
+`terminal`, `read_file` and `write_file` name capability adapters: other Agents may use their own local execution/file tools, without changing these boundaries. A tool-name substitution is not proof of tested installation or native Windows support.
+
 1. Use `terminal` to run `python <SKILL_DIR>/scripts/chat.py --help` and `python <SKILL_DIR>/scripts/chat.py doctor`. Doctor checks environment without opening chats. Resolve the actual Python executable; commands below use `python` as a placeholder for it.
 2. If needed, run `python <SKILL_DIR>/scripts/bootstrap.py --check`. With user permission for normal package installation, run the same without `--check`; it installs only the pinned message-decoding dependency into a private isolated environment and returns its Python path. Network access here is package download, not chat upload. Do not install any model/provider. Missing Python/venv support must produce an actionable prerequisite, not fabricated success.
 3. Ask the owner to confirm their account identifier and exact `db_storage` directory. Read metadata only if needed to locate candidates; never automatically capture every account. Use `terminal`:
@@ -92,6 +96,10 @@ Run `python <SKILL_DIR>/scripts/test.py` for synthetic-only Python tests and `bu
 - 通过 `terminal` 在本地执行；使用 `read_file` 读取证据，使用 `write_file` 写入分析。先确定此 Skill 的实际安装目录，不得假定当前工作目录或沿用开发者路径。
 
 ## 首次使用
+
+不使用私有数据试用时，按[合成示例](examples/README.md)在 Linux/WSL 运行 `python <SKILL_DIR>/examples/run_demo.py --output NEW_DIRECTORY`；父目录须已存在，输出在包外。不要为此初始化真实账号。它使用合成快照和预写报告正文调用真实 CLI，不验证 AI 推理或实时采集。尊重已有输出，不覆盖。真实数据配置继续执行下文；需要具体任务时再读[场景提示词](examples/prompts.md)，本入口的安全和范围规则始终适用。
+
+`terminal`、`read_file`、`write_file` 是能力适配名称，其他 Agent 可以使用自己的本地执行和文件工具，但不能改变安全边界。替换工具名不证明安装已实测，也不证明原生 Windows 支持。
 
 1. 使用 `terminal` 运行 `python <SKILL_DIR>/scripts/chat.py --help` 和 `python <SKILL_DIR>/scripts/chat.py doctor`。Doctor 只检查环境，不打开聊天记录。先确定实际 Python 可执行文件；下文命令中的 `python` 是其占位符。
 2. 如有需要，运行 `python <SKILL_DIR>/scripts/bootstrap.py --check`。在用户允许常规依赖安装后，去掉 `--check` 运行同一命令；它只会将固定版本的消息解码依赖安装到专用隔离环境，并返回该环境的 Python 路径。此处联网是为了下载软件包，不是上传聊天记录。不得安装任何模型或模型提供方组件。缺少 Python/venv 支持时，必须给出可操作的前置条件说明，不得虚报成功。
