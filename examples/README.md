@@ -1,99 +1,66 @@
-# Safe first result / 安全的第一个结果
+# 不用自己的聊天，先试一份示例
 
-## English
+这个示例使用虚构消息，带你试一下消息筛选、关键词查找和报告保存。不需要登录微信，不会读取你的日常配置，也不需要安装额外依赖。
 
-This example exercises the real `scripts/chat.py` CLI with purpose-built synthetic SQLite databases. It never opens WeChat, reads your default private configuration, installs dependencies or calls a model. **The report body is prewritten fixture text, not AI-generated reasoning.** The separate [video](../references/video_walkthrough.md) shows actual Agent/model interaction.
+**报告正文是预先写好的，运行时不会调用 AI。**它用来展示文件格式和本地脚本的工作方式，不是 AI 理解聊天的演示；想看 AI 实际整理聊天，可以看[操作视频](../references/video_walkthrough.md)。
 
-### Input → task → output
+## 怎么运行
 
-The generated `Demo Peer` conversation contains three messages on October 1, 2024 (UTC+8):
+需要 Linux 或 WSL，以及 Python 3.11+。此示例只用 Python 标准库；完整测试和真实压缩消息才需要 `zstandard==0.25.0`。示例运行器不支持原生 Windows。
 
-- 09:00, peer: “I will send the proposal by Friday.”
-- 09:05, self: “I will review it after delivery.”
-- 09:10, peer: “Room booking is still unconfirmed.”
-
-Two controls must be excluded: one message from the next day, and one from another conversation. These are invented records, not anonymized private chats. The snapshot cutoff is `2024-10-02T00:00:00+08:00`.
-
-The example selects `Demo Peer` on `2024-10-01`, creates evidence chunks, searches for `booking`, then saves the prewritten body using the actual request's full citation IDs. Expected output:
-
-- `selected_messages`: **3**
-- `keyword_matches`: **1**
-- `cited_messages`: **3**
-- `excluded_controls`: **2**
-- `source_mode`: `saved-snapshot`; `wal_included`: `false`; `model_called`: `false`
-- A local `analysis_<id>.md` plus JSON sidecar with matching report SHA-256 and citation IDs.
-
-### Run it without real WeChat data
-
-Tested route: Linux/WSL, Python 3.12. Requires Python 3.11+. This text-only example uses the standard library; the full suite and real compressed messages require the pinned `zstandard` dependency. Native Windows is deliberately not supported by this example runner, and passing it does not validate live capture or an Agent installer.
-
-From the **repository/installed Skill root**, run in a **Linux/WSL Bash terminal**. `python3` must resolve to Python 3.11+; choose another interpreter explicitly if needed:
+先进入仓库或已安装 Skill 的根目录，也就是同时包含 `SKILL.md` 和 `examples/` 的目录。在 **Linux/WSL 的 Bash 终端**运行：
 
 ```bash
 python3 examples/run_demo.py --output "$HOME/wechat-chat-demo-01"
 ```
 
-The output directory must not exist, its parent must already exist, and it must be outside the installed package. Choose another new name for another run. The runner rejects existing output rather than deleting or overwriting it. It uses an explicit demo-only private root, never your normal account configuration. It leaves generated synthetic files for inspection; there is no automatic cleanup.
+输出目录必须是安装包之外的**新目录**，其父目录必须已经存在。再次运行时换一个名称，例如 `wechat-chat-demo-02`，程序不会删除或覆盖旧结果。
 
-Open `report_path` returned by the command. Confirm the three cited lines, `saved-snapshot` provenance, the effective UTC+8 interval, and no `OUTSIDE_SELECTED_SCOPE` text in the report. The Chinese coverage header is current runtime behavior; it is not localized by this documentation update. Each run creates new request/report IDs, so byte-for-byte output equality is not expected. Use the counts, citation membership and that run's sidecar hash instead.
+## 运行后看什么
 
-To have an Agent run only this example, paste into the Agent, not a terminal:
+终端会返回一段 JSON，其中 `report_path` 是报告路径。复制这个路径，用文本编辑器打开，就能看到带消息引用的 Markdown 报告。WSL 用户也可以通过 Windows 资源管理器访问 WSL 文件，查看输出目录。
 
-```text
-Read wechat-local-chat/SKILL.md and examples/README.md. Run only the synthetic
-examples/run_demo.py example into a new directory outside the package.
-Do not initialize my account, open WeChat, collect real data or call a new model.
-Show the returned counts, report path and whether the report/sidecar hash matches.
-Explain that the report body is prewritten, not AI-generated analysis.
-```
+示例里的联系人叫 `Demo Peer`，三条聊天原文是英文：
 
-Adjust the Skill path to its actual installed location; an Agent needs local execution permission. See [task prompts](prompts.md) for real-data tasks after separately authorized setup.
+- 对方说：“I will send the proposal by Friday.”（周五前发送方案。）
+- 本人回复：“I will review it after delivery.”（收到后评审。）
+- 对方说：“Room booking is still unconfirmed.”（会议室预订尚未确认。）
 
-## 中文
+报告应列出这三条消息及其引用，开头会说明正文为预写示例。当前脚本输出保留英文消息和部分英文标签，本次仅整理说明文档，没有修改程序输出。
 
-此示例使用专门构造的合成 SQLite 数据库，实际调用 `scripts/chat.py`。不会打开微信、读取默认私有配置、安装依赖或调用模型。**报告正文是预写测试文本，不是 AI 推理结果。**另有[操作视频](../references/video_walkthrough.md)展示真实 Agent 和模型交互。
+生成的文件会保留在你指定的目录，不自动清理。示例使用独立的演示配置，不会读取或修改你的真实微信账号配置。
 
-### 输入 → 任务 → 输出
+## 想让 AI 助手替你运行
 
-生成的 `Demo Peer` 会话包含 2024 年 10 月 1 日（UTC+8）的三条消息，原文为英文：
-
-- 09:00，对方：“I will send the proposal by Friday.”（周五前发送方案。）
-- 09:05，本人：“I will review it after delivery.”（收到后评审。）
-- 09:10，对方：“Room booking is still unconfirmed.”（会议室预订尚未确认。）
-
-另外放入两条必须排除的对照消息：次日的一条消息、另一会话的一条消息。这些都是虚构记录，不是真实私聊的匿名改写。快照截止 `2024-10-02T00:00:00+08:00`。
-
-示例筛选 `Demo Peer` 在 `2024-10-01` 的消息、生成证据分块、搜索 `booking`，再使用本次请求的完整引用 ID 保存预写正文。预期结果：
-
-- `selected_messages`：**3**
-- `keyword_matches`：**1**
-- `cited_messages`：**3**
-- `excluded_controls`：**2**
-- `source_mode` 为 `saved-snapshot`；`wal_included` 为 `false`；`model_called` 为 `false`。
-- 本地 `analysis_<id>.md` 及 JSON 配套文件，报告 SHA-256 与引用 ID 核对一致。
-
-### 不使用真实微信数据运行
-
-实测路线：Linux/WSL、Python 3.12，要求 Python 3.11+。此纯文本样本仅使用标准库；完整测试和真实压缩消息需要固定版本的 `zstandard`。此示例运行器明确不支持原生 Windows；通过不能证明实时采集或某个 Agent 安装器可用。
-
-在**仓库或已安装 Skill 根目录**的 **Linux/WSL Bash 终端**执行。`python3` 必须对应 Python 3.11+，否则明确改用其他解释器：
-
-```bash
-python3 examples/run_demo.py --output "$HOME/wechat-chat-demo-01"
-```
-
-输出目录必须尚不存在、父目录已存在，并位于安装包之外。再次运行时另取新目录名。运行器拒绝已有输出，不删除或覆盖。它使用显式指定的演示私有根目录，不读取日常账号配置。生成的合成文件保留供核对，不自动清理。
-
-打开命令返回的 `report_path`，确认三条带引用正文、`saved-snapshot` 来源、实际 UTC+8 时间窗，以及报告没有 `OUTSIDE_SELECTED_SCOPE` 文本。中文覆盖范围头是当前运行时行为，本次文档更新不将它多语化。每次运行都会生成新请求和报告 ID，因此不比较两次文件字节；检查计数、引用归属与本次配套文件哈希。
-
-让 Agent 仅运行此示例时，向 Agent 提问，不是在终端执行：
+把下面的话发给有本地执行权限的 AI 助手，**不要粘贴到终端**。按实际位置说明这个 Skill 在哪个目录：
 
 ```text
-读取 wechat-local-chat/SKILL.md 和 examples/README.md。
-只运行合成 examples/run_demo.py 示例，输出到安装包外的新目录。
-不要初始化我的账号、打开微信、采集真实数据或调用新模型。
-给出返回计数、报告路径，以及报告和配套文件哈希是否一致。
-说明报告正文是预写样本，不是 AI 生成的分析。
+读取 wechat-local-chat 的 SKILL.md 和 examples/README.md。
+只运行 examples/run_demo.py 中的虚构数据示例，输出到安装包之外的新目录。
+不要配置我的账号、打开微信或读取真实聊天，也不要另行调用模型服务。
+完成后给我报告路径，检查消息筛选和引用是否正确。
+说明报告正文是预先写好的，不是 AI 生成的分析。
 ```
 
-按实际安装位置调整 Skill 路径，Agent 需要本地执行权限。另行授权并完成真实账号配置后，见[场景提示词](prompts.md)。
+## 示例具体检查了什么
+
+下面是需要排查问题或核验脚本时使用的细节，普通试用可以只看上面的报告。
+
+程序实际调用 `scripts/chat.py`：创建虚构数据库，选择 `Demo Peer` 在 2024 年 10 月 1 日（UTC+8）的聊天，生成待分析消息文件，查找 `booking`，再保存带完整消息引用的预写正文。
+
+另有两条不该入选的消息：一条日期是次日，另一条属于其他联系人。它们用于检查筛选是否越界，不应出现在报告中。
+
+终端结果中的字段应为：
+
+- `selected_messages: 3`：选中三条聊天。
+- `keyword_matches: 1`：一条消息含 `booking`。
+- `cited_messages: 3`：报告引用了三条消息。
+- `excluded_controls: 2`：另外两条没有被选中。
+- `source_mode: "saved-snapshot"`：处理预先构造的文件，不是实时读取微信。
+- `wal_included: false`、`model_called: false`：不包含数据库临时日志，不调用模型。
+
+报告旁的同名 `.json` 文件记录引用和报告 SHA-256。程序会检查该校验值与报告一致，并确认引用属于本次查询。报告不应包含 `OUTSIDE_SELECTED_SCOPE`。虚构记录的保存截止时间为 `2024-10-02T00:00:00+08:00`。
+
+每次运行都会生成新的查询编号和报告编号，不要求两次报告文件逐字节相同。这个示例通过，也不代表已经验证真实微信读取或其他 AI 助手的安装方式。
+
+真实账号任务需要另行确认并配置，见[仓库使用说明](../README.md#怎么用)和[更多提示词](prompts.md)。

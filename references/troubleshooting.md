@@ -1,51 +1,70 @@
-# Troubleshooting
+# 排障
 
-## English
+按症状处理后，再检查结果。不要只看命令是否重跑，也不要为排障扩大账号、联系人或时间范围。
 
-### Check recovery, not just a retry
+## 安装成功，但找不到辅助程序
 
-- **Helper missing →** finish dependency setup and `build --test` → require successful fixture exits and `doctor` showing `helper_built=true`; this is not a live-capture test.
-- **Duplicate contact →** confirm candidate identity metadata and retry with `--talker` → inspect the new request's exact talker and interval before reading evidence.
-- **Report rejected →** use full citation IDs from this request and save again → require `save-analysis` success, matching report/sidecar SHA-256 and evidence supporting the claims.
-- **Synthetic demo output exists →** choose a new output directory outside the package → require 3 selected messages, 1 keyword hit, 3 citations and 2 exclusions. Never delete or overwrite old output to make it pass.
-- **Zero matches →** inspect the interval and snapshot time without broadening scope → a verified zero count is an honest result, not proof of absence from all history.
+Skill 安装只复制代码和说明，不附带预编译 EXE 或 Python 依赖。
 
-### Other symptoms
+- 处理：让 AI 助手完成依赖配置，确认一个账号及其源目录，再运行 `build --test`，无需修改源码。
+- 检查：固定样例测试成功退出，且 `doctor` 显示 `helper_built=true`。这不代表实时采集已经验证。
 
-- **Install succeeds but helper missing:** Skill installation copies code/instructions, not a precompiled EXE or Python dependency. Let the Agent bootstrap the dependency, confirm one account/source, and run `build --test`. No source editing is needed.
-- **Unsupported WeChat:** only 4.1.15.56 x64 is accepted. Do not edit the version guard to force another build. New versions need a separately validated memory/schema adapter.
-- **WSL Windows interop unavailable:** capture requires the Windows process and system compiler. Check interop and Windows PATH; ordinary Linux can only process approved detached snapshots. Do not upload the database to compensate.
-- **No suitable Python:** install Python 3.11+ or use an existing managed interpreter. On some Linux systems venv/ensurepip is a separate OS component; use your normal dependency-management procedure, not mismatched system pip. `zstandard==0.25.0` is the only third-party Python dependency.
-- **Multiple Weixin main processes:** stop and confirm the intended logged-in account/process. The program must not guess or gather all of them.
-- **Access denied / private ACL failure / reparse path:** use an owned, trusted local output parent; do not elevate or disable protections automatically. Never overwrite another directory's permissions to make a test pass.
-- **Database changed during capture:** retry up to three times; if still unstable stop and report failure. Do not force a checkpoint or close WeChat without permission.
-- **No exact name or duplicate names:** show the returned identity metadata only, then use `--talker` after owner confirmation. Name selection is exact, not fuzzy.
-- **No messages:** check the UTC+8 window and captured-at timestamp. Phone-only records and WAL may be absent; file age does not prove completeness. Do not broaden contacts/time silently.
-- **Report rejected:** use `[消息:full_64_hex_id]` citations from this request, not another request or shortened IDs. At least one citation is needed for nonempty evidence. The Agent must still assess whether each claim is supported.
-- **Hashes mismatch:** do not edit manifests to bypass. Keep the old data, report the corruption and recapture only within the owner's scope.
-- **Private config exists:** initialization does not overwrite it. Use a new private root for a separately authorized account/setup; old archives stay intact. A different root must be supplied before every subcommand, including bootstrap.
+## 提示微信版本不支持
 
-## 中文
+- 处理：仅接受 **4.1.15.56 x64**。不得修改版本检查来强行运行其他版本；新版本须有单独验证过的内存和数据库结构适配器。
+- 检查：核对实际微信版本。未验证的版本不能靠绕过检查变成受支持版本。
 
-### 核对恢复，不只重试
+## WSL 无法调用 Windows
 
-- **缺少辅助程序 →** 完成依赖配置和 `build --test` → 样本成功退出，且 `doctor` 显示 `helper_built=true`；不代表实时采集已测。
-- **联系人同名 →** 确认候选身份元数据，使用 `--talker` 重试 → 读证据前核对新请求的准确 talker 与区间。
-- **报告被拒绝 →** 改用本次请求的完整引用 ID 并重新保存 → `save-analysis` 成功，报告与配套文件 SHA-256 一致，依据确实支持结论。
-- **合成样本输出已存在 →** 另选包外新目录 → 要求选中 3 条、命中 1 条、引用 3 个 ID、排除 2 条；不能为通过而删除或覆盖旧输出。
-- **零命中 →** 检查区间与快照时间，不扩大范围 → 核实零计数就是诚实结果，不证明全部历史都不存在。
+- 处理：采集需要 Windows 进程和系统编译器。检查 Windows 互操作功能及 Windows PATH。普通 Linux 只能处理已获授权、已保存到本地的独立快照，不能通过上传数据库来补救。
+- 检查：确认能够访问所需 Windows 工具；仍不可用时，停止实时采集，不把快照查询当成采集成功。
 
-### 其他症状
+## 没有合适的 Python，或依赖装不上
 
-- **安装成功但缺少辅助程序：** Skill 安装只复制代码和说明，不包含预编译 EXE 或 Python 依赖。让 Agent 初始化依赖，确认一个账号及其源路径，然后运行 `build --test`。无需修改源码。
-- **不支持的微信版本：** 仅接受 4.1.15.56 x64。不得修改版本保护来强行适配其他构建版本。新版本需要经过单独验证的内存/数据库结构适配器。
-- **WSL 无法使用 Windows 互操作：** 采集需要访问 Windows 进程和系统编译器。检查互操作功能及 Windows PATH；普通 Linux 只能处理已获授权的分离式快照。不得通过上传数据库来补救。
-- **没有合适的 Python：** 安装 Python 3.11+，或使用已有的受管理解释器。在某些 Linux 系统上，venv/ensurepip 是单独的操作系统组件；应采用常规依赖管理流程，不要使用与解释器不匹配的系统 pip。`zstandard==0.25.0` 是唯一的第三方 Python 依赖。
-- **存在多个 Weixin 主进程：** 停止操作，确认目标已登录账号/进程。程序不得猜测，也不得全部采集。
-- **拒绝访问 / 私有 ACL 检查失败 / 重解析路径：** 使用自己拥有且可信的本地输出父目录；不得自动提权或关闭保护。绝不为了让测试通过而覆盖其他目录的权限。
-- **采集期间数据库发生变化：** 最多重试三次；若仍不稳定，停止并报告失败。未经许可，不得强制执行检查点或关闭微信。
-- **找不到确切名称或存在重名：** 只展示返回的身份元数据，待所有者确认后使用 `--talker`。名称筛选采用精确匹配，不是模糊匹配。
-- **没有消息：** 检查 UTC+8 时间窗口和采集时间戳。可能缺少仅在手机上的记录和 WAL 内容；文件新旧不能证明完整性。不得静默扩大联系人或时间范围。
-- **报告被拒绝：** 使用本次请求中的 `[消息:full_64_hex_id]` 引用，不得使用其他请求的 ID 或缩短的 ID。证据非空时，至少需要一条引用。Agent 仍须判断每项主张是否得到证据支持。
-- **哈希不匹配：** 不得编辑清单来绕过检查。保留旧数据，报告损坏情况，并仅在所有者授权范围内重新采集。
-- **已有私有配置：** 初始化不会覆盖它。为另行授权的账号/设置使用新的私有根目录，旧归档保持不变。使用不同根目录时，必须在每个子命令之前指定该根目录，包括 bootstrap。
+- 处理：安装 Python 3.11+，或选用已有的受管理解释器。部分 Linux 系统将 venv/ensurepip 单独打包，应按常规依赖管理流程补齐，不要混用与解释器不匹配的系统 pip。
+- 检查：确认执行脚本和安装依赖用的是同一解释器。`zstandard==0.25.0` 是唯一的第三方 Python 依赖。
+
+## 存在多个 Weixin 主进程
+
+- 处理：停止操作，请账号本人确认要处理的已登录账号和进程。不得猜测，也不得全部采集。
+- 检查：目标账号和进程已明确，再继续操作。
+
+## 拒绝访问、私有权限检查失败，或路径涉及重解析
+
+- 处理：换用自己拥有且可信的本地输出父目录。不得自动提权、关闭保护，或为了让测试通过而覆盖其他目录的访问权限（ACL）。
+- 检查：新目录符合权限和路径检查，再重试；不要把关闭保护当成修复。
+
+## 采集期间数据库发生变化
+
+- 处理：最多重试三次。仍不稳定就停止并报告失败；未经许可，不得强制执行检查点或关闭微信。
+- 检查：重试后副本检查应通过，否则保留失败结果，不声称采集完成。
+
+## 找不到确切名称，或联系人同名
+
+- 处理：只展示返回的候选身份元数据，由账号本人确认后用 `--talker` 重试。名称采用精确匹配，不是模糊匹配，不能默认选第一个候选。
+- 检查：读取消息前，核对新请求中的确切联系人标识（`talker`）和时间区间。
+
+## 没有消息，或关键词零命中
+
+- 处理：检查 UTC+8 时间窗口、快照采集时间戳，不得悄悄扩大联系人或时间范围。仅在手机上的记录和 WAL 内容可能缺失，文件新旧不能证明记录完整。
+- 检查：核实零计数后，如实说明本次范围内没有匹配依据；不能据此断言全部历史中都不存在。
+
+## 报告保存被拒绝
+
+- 处理：使用本次请求的 `[消息:full_64_hex_id]` 引用，将占位值替换为完整 64 位十六进制消息 ID。不得使用其他请求的 ID 或缩写；消息非空时至少需要一条引用。修改后重新运行 `save-analysis`。
+- 检查：`save-analysis` 成功，报告的 SHA-256 与配套文件记录一致。AI 助手仍须逐项判断消息是否支持结论；引用存在不代表推理正确。
+
+## 合成示例的输出目录已存在
+
+- 处理：另选包外的新输出目录，不得为了通过测试而删除或覆盖旧输出。
+- 检查：应选中 3 条消息、关键词命中 1 条、引用 3 个消息 ID，并排除 2 条不符合条件的消息。
+
+## 哈希不匹配
+
+- 处理：保留旧数据，报告损坏情况，不得修改清单来绕过检查。重新采集只能在账号本人授权范围内进行。
+- 检查：新采集须通过哈希检查，旧数据不得被静默替换。
+
+## 私有配置已经存在
+
+- 处理：初始化不会覆盖已有配置。为另行授权的账号或配置使用新的私有根目录，旧归档保持不变。
+- 检查：改用其他根目录后，每次调用 `chat.py` 都须在子命令之前指定 `--root PRIVATE_DIRECTORY`；调用 `bootstrap.py` 也须指定同一 `--root PRIVATE_DIRECTORY`，不能回落到默认目录。

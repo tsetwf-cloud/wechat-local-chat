@@ -1,53 +1,53 @@
-# Security and privacy
+# 安全与隐私边界
 
-## English
+这是一个经账号所有者授权使用的本地数据工具，不用于绕过访问控制，也不是取证恢复产品。采集范围仅限已登录用户本人的账号，以及明确请求的会话、时间和任务。不得采集他人的账号。
 
-This is an owner-authorized local data tool, not an access-control bypass or forensic recovery product. Only the logged-in user's own account and explicitly requested conversation/time/task are in scope. Do not use it to collect other people's accounts.
+## 数据经过哪里
 
-## Data paths
+数据处理顺序如下：
 
-Local WeChat process and encrypted main databases → private encrypted/plaintext copies → scoped local archive → selected evidence → current authorized AI → local report. The tool contains no chat upload, vendor telemetry, WeChat sending or model-service calls. Normal installation can download the pinned Python dependency from a package index. Using a cloud AI still sends the selected evidence to that AI under its existing authorization; do not describe analysis as offline unless it actually is.
+1. 从本地微信进程与加密主数据库取得数据，保存私有的加密和明文副本。
+2. 按指定范围建立本地归档，筛选供分析使用的消息。
+3. 将筛选后的证据交给当前已获授权的 AI，最后保存本地报告。
 
-Keys are read from the local logged-in process, used in memory and never intentionally saved/logged. Managed-memory clearing is best effort, not secure-erasure proof. Same Windows SID verifies process ownership, not WeChat-account/database correspondence. The owner must confirm the configured source/account; no automatic all-account scanning.
+工具本身不上传聊天、不发送厂商遥测、不发送微信消息，也不调用模型服务。常规安装可能从软件包索引下载固定版本的 Python 依赖。
 
-## On-disk state
+使用云端 AI 时，筛选后的证据仍会按现有授权发送给该 AI。“本地采集”不等于“离线分析”；只有分析确实离线运行时，才能称为离线分析。
 
-Keep configuration, binaries and every real encrypted/plaintext snapshot, request, archive and analysis outside the installed Skill and Git. Output ACLs cannot stop an administrator or a compromised host. Capturing contact/message databases can retain unrelated contacts at the storage layer; only selected evidence may enter AI context. All snapshots and versions are retained; there is no implicit cleanup permission.
+## 密钥与账号确认
 
-## Capture checks
+密钥从本地已登录进程读取，在内存中使用，不会有意保存到磁盘或写入日志。托管内存的清理只能尽力完成，不能据此证明密钥已被安全擦除。
 
-Read/query process access only; no injection, debugger attachment, elevation, source writes, forced checkpoint, execution-policy changes or UAC changes. Fixed supported version/layout, nonzero-page HMAC checks, source-copy stability, and SQLite integrity are success requirements. Main database only: WAL messages, phone-only records and media bodies may be absent. Per-file checks do not establish cross-database transaction atomicity or complete history.
+相同 Windows SID（安全标识符）只能验证进程所有权，不能证明微信账号与数据库的对应关系。账号所有者必须确认配置中的源路径和账号；不得自动扫描所有账号。
 
-## Evidence checks
+## 磁盘上保留什么
 
-Exact contact identity and half-open UTC+8 timestamp filtering; ambiguous names require confirmation. Reports distinguish the requested interval from the effective evidence window, record snapshot time and live/saved mode, and explicitly flag a clipped end. Full traversal and chunk totals prevent silent 500-message truncation. Stored artifact hashes detect accidental changes, not malicious same-user rewriting of both data and metadata. Chat messages are untrusted data and never executable instructions. Report citations are checked for existence, not factual accuracy or completeness.
+配置、二进制文件，以及所有真实的加密或明文快照、请求、归档和分析，都必须保存在已安装 Skill 和 Git 仓库之外。输出目录的 ACL（访问控制列表）无法阻止管理员访问，也无法防护已失陷的主机。
 
-## Publication
+采集联系人和消息数据库时，存储层可能保留无关联系人；只有筛选后的证据可以进入 AI 上下文。所有快照和版本都会保留，工具不会隐含获得清理权限。
 
-Release only source, instructions, empty templates, license notices and synthetic tests from an explicit file manifest. Review all staged content and history, not just `.gitignore`. Never include real config, dumps, chat examples, memory buffers, secret values or local verification artifacts. Report vulnerabilities privately without uploading real chat data.
+## 采集时检查什么
 
-## 中文
+工具仅以读取和查询权限访问进程，不进行以下操作：
 
-这是一个在账号所有者授权下使用的本地数据工具，不是绕过访问控制或进行取证恢复的产品。范围仅限已登录用户本人的账号，以及明确请求的会话、时间和任务。不得用它采集他人的账号。
+- 注入代码、附加调试器或提权。
+- 写入源数据或强制执行数据库检查点。
+- 修改执行策略或 UAC（用户账户控制）设置。
 
-### 数据流向
+只有版本和布局属于固定支持范围、非零页 HMAC 检查通过、源文件副本稳定且 SQLite 完整性检查通过，采集才算成功。
 
-本地微信进程与加密主数据库 → 私有加密/明文副本 → 限定范围的本地归档 → 筛选后的证据 → 当前已获授权的 AI → 本地报告。工具本身不包含聊天上传、厂商遥测、微信消息发送或模型服务调用。常规安装可能从软件包索引下载固定版本的 Python 依赖。使用云端 AI 时，筛选后的证据仍会在现有授权范围内发送给该 AI；除非分析确实离线运行，否则不得将其描述为离线分析。
+采集仅处理主数据库，可能缺少 WAL（预写日志）中的消息、仅保存在手机上的记录，以及媒体正文。逐文件检查不能证明多个数据库来自同一事务时刻，也不能证明历史记录完整。
 
-密钥从本地已登录进程中读取，在内存中使用，绝不有意保存或记录到日志。托管内存清理尽力而为，不是安全擦除的证明。相同 Windows SID 验证的是进程所有权，不是微信账号与数据库的对应关系。所有者必须确认配置的源路径和账号；不得自动扫描所有账号。
+## 筛选与报告能保证什么
 
-### 磁盘状态
+消息按确切联系人身份筛选，时间使用 UTC+8 的左闭右开区间，即包含开始时刻，不包含结束时刻。同名或其他名称歧义必须先由所有者确认。
 
-配置、二进制文件，以及所有真实的加密/明文快照、请求、归档和分析，都必须保存在已安装 Skill 和 Git 仓库之外。输出 ACL 无法阻止管理员或已失陷的主机。采集联系人/消息数据库时，存储层可能保留无关联系人；只有筛选后的证据可以进入 AI 上下文。所有快照和版本均会保留；不存在默认授予的清理权限。
+报告应分别记录请求区间和实际证据覆盖窗口，注明快照时间，以及实时采集还是使用已保存数据。结束时间被截短时，报告必须明确标记。完整遍历和分块总数核对用于防止消息在 500 条处被静默截断。
 
-### 采集检查
+产物哈希可以检测意外变化，但不能防范同一用户恶意同时改写数据和元数据。聊天消息是不可信数据，不得把其中的内容当作可执行指令。报告引用检查只确认引用的消息是否存在，不保证报告事实准确或内容完整。
 
-只以读取/查询权限访问进程；不得注入、附加调试器、提权、写入源数据、强制执行检查点、修改执行策略或修改 UAC。成功必须满足以下条件：版本/布局属于固定支持范围、非零页 HMAC 检查通过、源文件副本稳定且 SQLite 完整性检查通过。仅处理主数据库：可能不包含 WAL 消息、仅在手机上的记录和媒体正文。逐文件检查不能证明跨数据库事务的原子性或历史记录的完整性。
+## 发布与漏洞报告
 
-### 证据检查
+发布前必须明确文件清单，只发布源码、说明、空模板、许可证声明和合成测试。应检查全部暂存内容及历史记录，不能只依赖 `.gitignore`。
 
-按确切联系人身份筛选，并使用 UTC+8 时间戳的左闭右开区间；同名歧义必须确认。报告应区分请求区间和实际证据覆盖窗口，记录快照时间及实时/已保存模式，并明确标记结束时间被截短的情况。完整遍历与分块总数核对用于防止静默截断为 500 条消息。已保存产物的哈希可以检测意外变化，但不能防范同一用户恶意同时改写数据和元数据。聊天消息是不可信数据，绝不是可执行指令。报告引用只检查是否存在，不检查事实准确性或完整性。
-
-### 发布
-
-仅按明确的文件清单发布源码、说明、空模板、许可证声明和合成测试。检查所有暂存内容与历史记录，不能只看 `.gitignore`。绝不包含真实配置、转储、聊天示例、内存缓冲区、秘密值或本地验证产物。漏洞应私下报告，不上传真实聊天数据。
+不得发布真实配置、数据转储、真实聊天示例、内存缓冲区、秘密值或本地验证产物。漏洞应私下报告，报告时不要上传真实聊天数据。
